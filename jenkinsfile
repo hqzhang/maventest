@@ -1,0 +1,76 @@
+pipeline {
+
+    agent any
+    environment {
+    	PATH = "/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/local/Cellar/maven/3.5.3/libexec/bin:$PATH"
+    	DOCKER_HOST='tcp://localhost:2376'
+        IP='localhost'
+    }
+    stages {
+        stage('Building and Testing...') {
+            steps {
+                sh 'mvn clean package'
+                //sh 'mvn test'
+                //sh  'mvn spring-boot:run &'
+                //sh  'sleep 25 '
+            }
+        }
+/*
+        stage('Verifying') {
+            steps {
+                echo 'Verifying....'
+                sh  'mvn spring-boot:run &'
+                sh  'sleep 25 '
+                sh 'curl http://localhost:8090/hello'
+                sh 'curl -X POST localhost:8090/shutdown'
+                sh 'cp target/spring-helloworld-cf-0.0.1-SNAPSHOT.jar images/nginx/target/'
+            }
+        }
+   
+        stage('Docker Image Building...') {
+            steps {
+                echo 'Image Building...'
+                sh 'cd images/nginx;make'
+                sh 'pwd'
+                echo 'CoreOS Building...'
+            }
+        }
+
+        stage('Docker Image Deploying') {
+            steps {
+                echo 'Deploying...'
+                sh 'cd images/nginx;make run'
+                sh  'sleep 20 '
+                sh 'curl http://localhost:8090/hello'
+                sh 'docker rm -f docker-web'
+            }
+        }
+*/
+        stage('Cloud Deploying') {
+            steps {
+                echo 'Cloud Deploying....'
+                sh ' terraform get;terraform plan;terraform apply'
+            }
+        }
+
+        stage('Cloud Configuration') {
+            steps {
+                echo 'Cloud Configuration....'
+                sh 'ansible all -m ping'
+                sh 'ansible-playbook -v mybook.yml'
+                
+             }
+        }
+
+        stage('Cloud Verifying') {
+            steps {
+                echo 'Curl web on VM....'
+                sh  'sleep 20 '
+                sh 'MyIP=$(./plugins/inventory/terraform.py --hostfile |awk "NR==2"|cut -d" " -f1); \
+                   curl http://${MyIP}:8080/hello'
+                sh 'echo "yes"|terraform destroy'
+            }
+        }
+
+    }
+}

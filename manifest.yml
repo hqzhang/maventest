@@ -1,0 +1,6 @@
+---
+applications:
+- name: boot-web
+  instances: 1
+  memory: 1024M
+  path: target/spring-helloworld-cf-0.0.1.SNAPSHOT.jar

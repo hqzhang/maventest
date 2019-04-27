@@ -1,0 +1,19 @@
+- name: Configure VM
+  hosts: all
+  gather_facts: True
+  tasks:
+  - name: install system utilities
+    sudo: yes
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+    - java-1.8.0-openjdk
+    tags:
+    - bootstrap
+
+  - name: Install web server
+    copy: src=./target/spring-helloworld-cf-0.0.1-SNAPSHOT.jar  dest=/tmp/ force=yes mode=0644
+    sudo: yes
+  - name: Running web server
+    shell: nohup java -jar /tmp/spring-helloworld-cf-0.0.1-SNAPSHOT.jar </dev/null >/dev/null 2>&1 &
